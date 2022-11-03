@@ -27,11 +27,6 @@ updates:
       interval: "weekly"
       day: "saturday"
 
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "daily"
-
   - package-ecosystem: "docker"
     directory: "/images"
     schedule:
