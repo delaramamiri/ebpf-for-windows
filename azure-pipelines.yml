@@ -40,6 +40,17 @@ stages:
       vmImage: windows-2019
       publish: false
 
+- stage: build_ltsc_debug
+  displayName: Build (VS2019 Debug)
+  dependsOn: []
+  jobs:
+  - template: ./.github/workflows/build.yml
+    parameters:
+      arch: x64
+      config: Debug
+      vmImage: windows-latest
+      publish: false
+
 # pool:
 #   vmImage: "windows-latest"
   
