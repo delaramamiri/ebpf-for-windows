@@ -8,39 +8,40 @@ trigger:
 
 stages:
 
-- stage: build_debug
-  displayName: Build (Debug)
+- stage: ws_latest
+  displayName: Windows Server 2019
   dependsOn: []
   jobs:
-  - template: ./.github/workflows/build.yml
-    parameters:
-      arch: x64
-      config: Debug
+  - job: build_x64
+    displayName: x64
+    pool:
       vmImage: windows-latest
-      publish: false
+    steps:
+    - checkout: self
+      submodules: true
+      persistCredentials: true
 
-# - stage: build_release
-#   displayName: Build (Release)
-#   dependsOn: []
-#   jobs:
-#   - template: ./.github/workflows/build.yml
-#     parameters:
-#       arch: x64
-#       config: Release
+    - task: PowerShell@2
+      displayName: Install DuoNic
+      inputs:
+        targetType: inline
+        script: |
+          if (!$IsWindows) { return } # Windows only
+          $HasTestSigning = $false
+          try { $HasTestSigning = ("$(bcdedit)" | Select-String -Pattern "testsigning\s+Yes").Matches.Success } catch { }
+          if (!$HasTestSigning) { Write-Error "Test Signing Not Enabled!" }
 
-# Some driver developers are building for WS2022 LTSC targets using VS2019 +
-# the Windows Server 2022 WDK, so validate our project still builds in that
-# environment.
-- stage: build_debug_2019
-  displayName: Build (VS2019 Debug)
-  dependsOn: []
-  jobs:
-  - template: ./.github/workflows/build.yml
-    parameters:
-      arch: x64
-      config: Debug
-      vmImage: windows-2019
-      publish: false
+          Download-CoreNet-Deps
+
+          Write-Host "Installing test root certificate"
+          $RootCertPath = Join-Path $SetupPath "testroot-sha2.cer"
+          if (!(Test-Path $RootCertPath)) { Write-Error "Missing file: $RootCertPath" }
+          certutil.exe -addstore -f "Root" $RootCertPath
+          Write-Host "Installing DuoNic driver"
+          $DuoNicPath = Join-Path $SetupPath duonic
+          $DuoNicScript = (Join-Path $DuoNicPath duonic.ps1)
+          if (!(Test-Path $DuoNicScript)) { Write-Error "Missing file: $DuoNicScript" }
+          Invoke-Expression "cmd /c `"pushd $DuoNicPath && pwsh duonic.ps1 -Install`""
 
 
 - stage: ws_2019
@@ -56,16 +57,8 @@ stages:
       submodules: true
       persistCredentials: true
 
-    # - task: VSBuild@1
-    #   displayName: Build Solution (Release)
-    #   inputs:
-    #     solution: ebpf-for-windows.sln
-    #     platform: x64
-    #     configuration: release
-    #     msbuildArgs: -m -p:UndockedBuildId=$(Build.BuildId)
-
     - task: PowerShell@2
-      displayName: Test Install
+      displayName: Install DuoNic
       inputs:
         targetType: inline
         script: |
