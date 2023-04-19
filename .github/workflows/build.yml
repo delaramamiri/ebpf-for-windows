@@ -1,0 +1,119 @@
+# This template contains steps to build the solution for a single architecture.
+
+parameters:
+  arch: ''
+  config: 'Debug,Release'
+  vmImage: 'windows-2022'
+  publish: true
+
+jobs:
+- job: build_${{ parameters.arch }}
+  displayName: ${{ parameters.arch }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  variables:
+  - name: runCodesignValidationInjection # We don't sign things currently
+    value: false
+  steps:
+  - checkout: self
+    submodules: true
+
+  - task: PowerShell@2
+    displayName: Prepare Machine
+    inputs:
+      filePath: tools/prepare-machine.ps1
+      arguments: -ForBuild -Verbose
+
+  - task: PowerShell@2
+    displayName: Install LLVM 11.0
+    inputs:
+      targetType: inline
+      script: |
+        choco install -y llvm --version 11.0.1 --allow-downgrade
+        Write-Host ##vso[task.prependpath]C:\Program Files\LLVM\bin
+
+  # Use the latest NuGet version so we can reference local NuGet packages.
+  - task: NuGetToolInstaller@1
+    displayName: 'Use NuGet 6.4.0'
+    inputs:
+      versionSpec: 6.4.0
+
+  # Attempt to work around unreliable NuGet restore by refreshing the credential provider.
+  - task: NuGetAuthenticate@1
+    inputs:
+      forceReinstallCredentialProvider: true
+
+  - task: NuGetCommand@2
+    displayName: Nuget Restore
+    inputs:
+      restoreSolution: xdp.sln
+      feedsToUse: config
+      nugetConfigPath: ./src/nuget.config
+
+  - task: PowerShell@2
+    displayName: Prepare for compiling eBPF programs
+    inputs:
+      targetType: inline
+      script: tools/prepare-machine.ps1 -ForEbpfBuild -Verbose
+
+  - task: VSBuild@1
+    displayName: Build Solution (Debug)
+    condition: and(succeeded(), contains('${{ parameters.config }}', 'Debug'))
+    inputs:
+      solution: xdp.sln
+      platform: ${{ parameters.arch }}
+      configuration: debug
+      msbuildArgs: -m
+
+  - task: VSBuild@1
+    displayName: Build Solution (Release)
+    condition: and(succeeded(), contains('${{ parameters.config }}', 'Release'))
+    inputs:
+      solution: xdp.sln
+      platform: ${{ parameters.arch }}
+      configuration: release
+      msbuildArgs: -m
+
+  - task: PowerShell@2
+    displayName: Clean up Artifacts (Debug)
+    condition: and(succeeded(), contains('${{ parameters.config }}', 'Debug'))
+    inputs:
+      filePath: .azure/scripts/clean-artifacts.ps1
+      arguments: -Config Debug -Arch ${{ parameters.arch }}
+
+  - task: PowerShell@2
+    displayName: Clean up Artifacts (Release)
+    condition: and(succeeded(), contains('${{ parameters.config }}', 'Release'))
+    inputs:
+      filePath: .azure/scripts/clean-artifacts.ps1
+      arguments: -Config Release -Arch ${{ parameters.arch }}
+
+  - task: PowerShell@2
+    displayName: Sign and Package
+    inputs:
+      filePath: tools/sign.ps1
+      arguments: -Config ${{ parameters.config }} -Arch ${{ parameters.arch }}
+
+  - task: CopyFiles@2
+    displayName: Filter Artifacts
+    condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
+    inputs:
+      sourceFolder: artifacts/bin
+      contents: '**/!(*.ilk|*.exp|*.lastcodeanalysissucceeded)'
+      targetFolder: $(Build.ArtifactStagingDirectory)/bin
+
+  - task: PublishBuildArtifacts@1
+    displayName: Upload Artifacts
+    condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
+    inputs:
+      artifactName: artifacts
+      pathToPublish: $(Build.ArtifactStagingDirectory)
+      parallel: true
+
+  - task: PublishSymbols@2
+    condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
+    inputs:
+        sourceFolder: $(Build.ArtifactStagingDirectory)/bin
+        searchPattern: '**/*.pdb'
+        symbolServerType: teamServices
+        indexSources: false
