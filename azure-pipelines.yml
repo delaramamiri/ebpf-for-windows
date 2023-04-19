@@ -9,7 +9,7 @@ trigger:
 stages:
 
 - stage: ws_latest
-  displayName: Windows Server 2019
+  displayName: Windows Server-latest
   dependsOn: []
   jobs:
   - job: build_x64
