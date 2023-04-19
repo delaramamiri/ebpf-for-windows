@@ -31,7 +31,7 @@ stages:
 # Some driver developers are building for WS2022 LTSC targets using VS2019 +
 # the Windows Server 2022 WDK, so validate our project still builds in that
 # environment.
-- stage: build_debug
+- stage: build_debug_2019
   displayName: Build (VS2019 Debug)
   dependsOn: []
   jobs:
