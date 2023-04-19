@@ -37,26 +37,26 @@ jobs:
     inputs:
       forceReinstallCredentialProvider: true
 
-  - task: CopyFiles@2
-    displayName: Filter Artifacts
-    condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
-    inputs:
-      sourceFolder: artifacts/bin
-      contents: '**/!(*.ilk|*.exp|*.lastcodeanalysissucceeded)'
-      targetFolder: $(Build.ArtifactStagingDirectory)/bin
+  # - task: CopyFiles@2
+  #   displayName: Filter Artifacts
+  #   condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
+  #   inputs:
+  #     sourceFolder: artifacts/bin
+  #     contents: '**/!(*.ilk|*.exp|*.lastcodeanalysissucceeded)'
+  #     targetFolder: $(Build.ArtifactStagingDirectory)/bin
 
-  - task: PublishBuildArtifacts@1
-    displayName: Upload Artifacts
-    condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
-    inputs:
-      artifactName: artifacts
-      pathToPublish: $(Build.ArtifactStagingDirectory)
-      parallel: true
+  # - task: PublishBuildArtifacts@1
+  #   displayName: Upload Artifacts
+  #   condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
+  #   inputs:
+  #     artifactName: artifacts
+  #     pathToPublish: $(Build.ArtifactStagingDirectory)
+  #     parallel: true
 
-  - task: PublishSymbols@2
-    condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
-    inputs:
-        sourceFolder: $(Build.ArtifactStagingDirectory)/bin
-        searchPattern: '**/*.pdb'
-        symbolServerType: teamServices
-        indexSources: false
+  # - task: PublishSymbols@2
+  #   condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
+  #   inputs:
+  #       sourceFolder: $(Build.ArtifactStagingDirectory)/bin
+  #       searchPattern: '**/*.pdb'
+  #       symbolServerType: teamServices
+  #       indexSources: false
