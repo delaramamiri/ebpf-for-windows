@@ -56,32 +56,35 @@ stages:
       submodules: true
       persistCredentials: true
 
-    - task: VSBuild@1
-      displayName: Build Solution (Release)
-      inputs:
-        solution: ebpf-for-windows.sln
-        platform: x64
-        configuration: release
-        msbuildArgs: -m -p:UndockedBuildId=$(Build.BuildId)
-
-    # - task: PowerShell@2
-    #   displayName: Test Install
+    # - task: VSBuild@1
+    #   displayName: Build Solution (Release)
     #   inputs:
-    #     targetType: inline
-    #     script: |
-    #       $DrvPath = Join-Path $(Get-Location) "build\bin\amd64fre\qeo.sys"
-    #       $CertPath = Join-Path $(Get-Location) "build\CoreNetSignRoot.cer"
-    #       .\src\test-sign.ps1 $DrvPath
-    #       CertUtil.exe -addstore Root $CertPath
-    #       CertUtil.exe -addstore TrustedPublisher $CertPath
-    #       sc.exe create "qeo" type= kernel binpath= $DrvPath start= demand
-    #       if ($LastExitCode) { Write-Error "Failed to install driver" }
-    #       net.exe start qeo
-    #       if ($LastExitCode) { Write-Error "Failed to start driver" }
-    #       sc.exe query qeo
-    #       net.exe stop qeo
-    #       if ($LastExitCode) { Write-Error "Failed to stop driver" }
-    #       sc.exe query qeo
+    #     solution: ebpf-for-windows.sln
+    #     platform: x64
+    #     configuration: release
+    #     msbuildArgs: -m -p:UndockedBuildId=$(Build.BuildId)
+
+    - task: PowerShell@2
+      displayName: Test Install
+      inputs:
+        targetType: inline
+        script: |
+          if (!$IsWindows) { return } # Windows only
+          $HasTestSigning = $false
+          try { $HasTestSigning = ("$(bcdedit)" | Select-String -Pattern "testsigning\s+Yes").Matches.Success } catch { }
+          if (!$HasTestSigning) { Write-Error "Test Signing Not Enabled!" }
+
+          Download-CoreNet-Deps
+
+          Write-Host "Installing test root certificate"
+          $RootCertPath = Join-Path $SetupPath "testroot-sha2.cer"
+          if (!(Test-Path $RootCertPath)) { Write-Error "Missing file: $RootCertPath" }
+          certutil.exe -addstore -f "Root" $RootCertPath
+          Write-Host "Installing DuoNic driver"
+          $DuoNicPath = Join-Path $SetupPath duonic
+          $DuoNicScript = (Join-Path $DuoNicPath duonic.ps1)
+          if (!(Test-Path $DuoNicScript)) { Write-Error "Missing file: $DuoNicScript" }
+          Invoke-Expression "cmd /c `"pushd $DuoNicPath && pwsh duonic.ps1 -Install`""
 
 # pool:
 #   vmImage: "windows-latest"
