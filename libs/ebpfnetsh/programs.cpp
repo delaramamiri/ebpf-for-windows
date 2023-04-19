@@ -63,8 +63,9 @@ _process_interface_parameter(
     ebpf_result_t result = EBPF_SUCCESS;
     if (_prog_type_supports_interface(prog_type)) {
         result = parse_if_index(interface_parameter, if_index);
-        if (result != EBPF_SUCCESS)
+        if (result != EBPF_SUCCESS) {
             std::cerr << "Interface parameter is invalid." << std::endl;
+        }
     } else {
         std::cerr << "Interface parameter is not allowed for program types that don't support interfaces." << std::endl;
         result = EBPF_INVALID_ARGUMENT;
@@ -76,6 +77,17 @@ struct _program_unloader
 {
     struct bpf_object* object;
     ~_program_unloader() { bpf_object__close(object); }
+};
+
+struct _link_deleter
+{
+    struct bpf_link* link;
+    ~_link_deleter()
+    {
+        if (link != nullptr) {
+            ebpf_link_close(link);
+        }
+    }
 };
 
 // The following function uses windows specific input type to match
@@ -188,7 +200,7 @@ handle_ebpf_add_program(
     program_fd = bpf_program__fd(program);
 
     // Program loaded. Populate the unloader with object pointer, such that
-    // the program gets unloaded automatically, if it fails to get attached.
+    // the program gets unloaded automatically, if this function fails somewhere.
     struct _program_unloader unloader = {object};
 
     ebpf_result_t result;
@@ -210,10 +222,11 @@ handle_ebpf_add_program(
     if (result != EBPF_SUCCESS) {
         std::cerr << "error " << result << ": could not attach program" << std::endl;
         return ERROR_SUPPRESS_OUTPUT;
-    } else {
-        // Program successfully attached, reset unloader.
-        unloader.object = nullptr;
     }
+
+    // Link attached. Populate the deleter with link pointer, such that link
+    // object is closed when the function returns.
+    struct _link_deleter link_deleter = {link};
 
     if (pinned_type == PT_FIRST) {
         // The pinpath specified is like a "file" under which to pin programs.
@@ -242,8 +255,8 @@ handle_ebpf_add_program(
         return ERROR_SUPPRESS_OUTPUT;
     }
     std::cout << "Loaded with ID " << info.id << std::endl;
+    unloader.object = nullptr;
 
-    ebpf_link_close(link);
     _ebpf_netsh_objects.push_back(object);
 
     return ERROR_SUCCESS;
@@ -405,8 +418,9 @@ _ebpf_program_attach_by_id(
     if (result == EBPF_SUCCESS) {
         ebpf_result_t local_result =
             ebpf_program_attach_by_fd(program_fd, &attach_type, attach_parameters, attach_parameters_size, &link);
-        if (local_result == EBPF_SUCCESS)
+        if (local_result == EBPF_SUCCESS) {
             ebpf_link_close(link);
+        }
     }
 
     Platform::_close(program_fd);

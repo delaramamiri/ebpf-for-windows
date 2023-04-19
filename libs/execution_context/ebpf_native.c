@@ -8,6 +8,8 @@
 #include "ebpf_program.h"
 #include "ebpf_protocol.h"
 
+#include <intrin.h>
+
 #define DEFAULT_PIN_ROOT_PATH "/ebpf/global"
 #define EBPF_MAX_PIN_PATH_LENGTH 256
 
@@ -243,27 +245,28 @@ ebpf_native_acquire_reference(_Inout_ ebpf_native_module_t* module)
 {
     ebpf_assert(module->base.marker == _ebpf_native_marker);
 
-// Locally suppresses "Unreferenced variable" warning, which in 'Release' builds is treated as an error.
-#pragma warning(push)
-#pragma warning(disable : 4189)
-    int32_t new_ref_count = ebpf_interlocked_increment_int32(&module->base.reference_count);
-    ebpf_assert(new_ref_count != 1);
-#pragma warning(pop)
+    int64_t new_ref_count = ebpf_interlocked_increment_int64(&module->base.reference_count);
+    if (new_ref_count == 1) {
+        __fastfail(FAST_FAIL_INVALID_REFERENCE_COUNT);
+    }
 }
 
 void
 ebpf_native_release_reference(_In_opt_ _Post_invalid_ ebpf_native_module_t* module)
 {
-    int32_t new_ref_count;
+    int64_t new_ref_count;
     ebpf_lock_state_t module_lock_state = 0;
 
-    if (!module)
+    if (!module) {
         EBPF_RETURN_VOID();
+    }
 
     ebpf_assert(module->base.marker == _ebpf_native_marker);
 
-    new_ref_count = ebpf_interlocked_decrement_int32(&module->base.reference_count);
-    ebpf_assert(new_ref_count != -1);
+    new_ref_count = ebpf_interlocked_decrement_int64(&module->base.reference_count);
+    if (new_ref_count < 0) {
+        __fastfail(FAST_FAIL_INVALID_REFERENCE_COUNT);
+    }
 
     if (new_ref_count == 1) {
         // Check if all the program references have been released. If that
@@ -313,6 +316,7 @@ ebpf_native_terminate()
     // ebpf_provider_unload is blocking call until all the
     // native modules have been detached.
     ebpf_provider_unload(_ebpf_native_provider);
+    _ebpf_native_provider = NULL;
 
     // All native modules should be cleaned up by now.
     ebpf_assert(!_ebpf_native_client_table || ebpf_hash_table_key_count(_ebpf_native_client_table) == 0);
@@ -359,7 +363,7 @@ _ebpf_native_provider_attach_client_callback(
         goto Done;
     }
     table = (metadata_table_t*)client_registration_instance->NpiSpecificCharacteristics;
-    if (!table->programs || !table->maps) {
+    if (!table || !table->programs || !table->maps) {
         result = EBPF_INVALID_ARGUMENT;
         goto Done;
     }
