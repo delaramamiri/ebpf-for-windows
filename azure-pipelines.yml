@@ -78,6 +78,10 @@ stages:
           $DuoNicScript = (Join-Path $DuoNicPath duonic.ps1)
           if (!(Test-Path $DuoNicScript)) { Write-Error "Missing file: $DuoNicScript" }
           Invoke-Expression "cmd /c `"pushd $DuoNicPath && pwsh duonic.ps1 -Install`""
+        
+        script: |
+          if (!$HasTestSigning){echo test sign is not enabled}
+
 
 # pool:
 #   vmImage: "windows-latest"
