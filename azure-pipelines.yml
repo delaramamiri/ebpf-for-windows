@@ -43,6 +43,46 @@ stages:
       publish: false
 
 
+- stage: ws_2019
+  displayName: Windows Server 2019
+  dependsOn: []
+  jobs:
+  - job: build_x64
+    displayName: x64
+    pool:
+      vmImage: windows-2019
+    steps:
+    - checkout: self
+      submodules: true
+      persistCredentials: true
+
+    - task: VSBuild@1
+      displayName: Build Solution (Release)
+      inputs:
+        solution: ebpf-for-windows.sln
+        platform: x64
+        configuration: release
+        msbuildArgs: -m -p:UndockedBuildId=$(Build.BuildId)
+
+    # - task: PowerShell@2
+    #   displayName: Test Install
+    #   inputs:
+    #     targetType: inline
+    #     script: |
+    #       $DrvPath = Join-Path $(Get-Location) "build\bin\amd64fre\qeo.sys"
+    #       $CertPath = Join-Path $(Get-Location) "build\CoreNetSignRoot.cer"
+    #       .\src\test-sign.ps1 $DrvPath
+    #       CertUtil.exe -addstore Root $CertPath
+    #       CertUtil.exe -addstore TrustedPublisher $CertPath
+    #       sc.exe create "qeo" type= kernel binpath= $DrvPath start= demand
+    #       if ($LastExitCode) { Write-Error "Failed to install driver" }
+    #       net.exe start qeo
+    #       if ($LastExitCode) { Write-Error "Failed to start driver" }
+    #       sc.exe query qeo
+    #       net.exe stop qeo
+    #       if ($LastExitCode) { Write-Error "Failed to stop driver" }
+    #       sc.exe query qeo
+
 # pool:
 #   vmImage: "windows-latest"
   
