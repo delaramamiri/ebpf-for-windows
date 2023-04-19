@@ -37,12 +37,6 @@ jobs:
     inputs:
       forceReinstallCredentialProvider: true
 
-  - task: PowerShell@2
-    displayName: Sign and Package
-    inputs:
-      filePath: tools/sign.ps1
-      arguments: -Config ${{ parameters.config }} -Arch ${{ parameters.arch }}
-
   - task: CopyFiles@2
     displayName: Filter Artifacts
     condition: and(succeeded(), eq('${{ parameters.publish }}', 'true'))
