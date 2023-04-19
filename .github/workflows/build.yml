@@ -19,12 +19,6 @@ jobs:
     submodules: true
 
   - task: PowerShell@2
-    displayName: Prepare Machine
-    inputs:
-      filePath: tools/prepare-machine.ps1
-      arguments: -ForBuild -Verbose
-
-  - task: PowerShell@2
     displayName: Install LLVM 11.0
     inputs:
       targetType: inline
@@ -49,12 +43,6 @@ jobs:
       restoreSolution: xdp.sln
       feedsToUse: config
       nugetConfigPath: ./src/nuget.config
-
-  - task: PowerShell@2
-    displayName: Prepare for compiling eBPF programs
-    inputs:
-      targetType: inline
-      script: tools/prepare-machine.ps1 -ForEbpfBuild -Verbose
 
   - task: VSBuild@1
     displayName: Build Solution (Debug)
