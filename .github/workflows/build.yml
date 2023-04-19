@@ -37,24 +37,6 @@ jobs:
     inputs:
       forceReinstallCredentialProvider: true
 
-  - task: VSBuild@1
-    displayName: Build Solution (Debug)
-    condition: and(succeeded(), contains('${{ parameters.config }}', 'Debug'))
-    inputs:
-      solution: xdp.sln
-      platform: ${{ parameters.arch }}
-      configuration: debug
-      msbuildArgs: -m
-
-  - task: VSBuild@1
-    displayName: Build Solution (Release)
-    condition: and(succeeded(), contains('${{ parameters.config }}', 'Release'))
-    inputs:
-      solution: xdp.sln
-      platform: ${{ parameters.arch }}
-      configuration: release
-      msbuildArgs: -m
-
   - task: PowerShell@2
     displayName: Clean up Artifacts (Debug)
     condition: and(succeeded(), contains('${{ parameters.config }}', 'Debug'))
