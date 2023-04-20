@@ -27,6 +27,7 @@ stages:
         targetType: inline
         script: |
           C:\Windows\system32\msiexec.exe /i eBPF-for-Windows.0.8.0.msi INSTALLFOLDER="C:\Program Files\ebpf-for-windows" ADDLOCAL=eBPF_Runtime_Components,eBPF_Runtime_Components_JIT,eBPF_Development,eBPF_Testing
+          .\test\api_test.exe
 
 
     - task: PowerShell@2
@@ -50,7 +51,7 @@ stages:
           $DuoNicScript = (Join-Path $DuoNicPath duonic.ps1)
           if (!(Test-Path $DuoNicScript)) { Write-Error "Missing file: $DuoNicScript" }
           Invoke-Expression "cmd /c `"pushd $DuoNicPath && pwsh duonic.ps1 -Install`""
-          api-test
+        
 
 
 - stage: ws_2019
