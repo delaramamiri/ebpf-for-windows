@@ -27,7 +27,7 @@ stages:
         targetType: inline
         script: |
           C:\Windows\system32\msiexec.exe /i eBPF-for-Windows.0.8.0.msi INSTALLFOLDER="C:\Program Files\ebpf-for-windows" ADDLOCAL=eBPF_Runtime_Components,eBPF_Runtime_Components_JIT,eBPF_Development,eBPF_Testing
-          .\test\api_test.exe
+          sc start ebpfcore
 
 
     - task: PowerShell@2
