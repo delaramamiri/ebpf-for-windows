@@ -84,6 +84,8 @@ stages:
       inputs:
         targetType: inline    
         script: |
+          $HasTestSigning = $false
+          try { $HasTestSigning = ("$(bcdedit)" | Select-String -Pattern "testsigning\s+Yes").Matches.Success } catch { }
           if (!$HasTestSigning){echo test sign is not enabled}
 
 
