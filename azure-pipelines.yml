@@ -1,0 +1,101 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+stages:
+
+- stage: ws_latest
+  displayName: Windows Server-latest
+  dependsOn: []
+  jobs:
+  - job: build_x64
+    displayName: x64
+    pool:
+      vmImage: windows-latest
+    steps:
+    - checkout: self
+      submodules: true
+      persistCredentials: true
+   
+    - task: PowerShell@2
+      displayName: Install EBPF
+      inputs:
+        targetType: inline
+        script: |
+          C:\Windows\system32\msiexec.exe /i eBPF-for-Windows.0.8.0.msi INSTALLFOLDER="C:\Program Files\ebpf-for-windows" ADDLOCAL=eBPF_Runtime_Components,eBPF_Runtime_Components_JIT,eBPF_Development,eBPF_Testing /qn
+          start cmd.exe
+          "C:\Program Files\ebpf-for-windows\testing\api_test.exe"
+
+    - task: PowerShell@2
+      displayName: Install DuoNic
+      inputs:
+        targetType: inline
+        script: |
+          start-process PowerShell -verb runas
+          echo "Test signing is enabled."
+
+
+    - task: PowerShell@2
+      displayName: Create a crash
+      inputs:
+        targetType: inline
+        script: |
+          start-process PowerShell -verb runas
+          $dest = "C:\NotMyFault.zip" 
+          $URL="https://download.sysinternals.com/files/NotMyFault.zip"
+          Invoke-WebRequest -URI $URL -OutFile $dest
+          Expand-Archive C:\NotMyFault.zip -DestinationPath C:\NotMyFault
+          echo "before running the crash"
+          C:\NotMyFault\notmyfaultc.exe crash 0x01 -accepteula
+          Restart-Computer
+        
+
+          
+
+# - stage: ws_2019
+#   displayName: Windows Server 2019
+#   dependsOn: []
+#   jobs:
+#   - job: build_x64
+#     displayName: x64
+#     pool:
+#       vmImage: windows-2019
+#     steps:
+#     - checkout: self
+#       submodules: true
+#       persistCredentials: true
+
+#     - task: PowerShell@2
+#       displayName: Install EBPF
+#       inputs:
+#         targetType: inline
+#         script: |
+#           C:\Windows\system32\msiexec.exe /i eBPF-for-Windows.0.8.0.msi INSTALLFOLDER="C:\Program Files\ebpf-for-windows" ADDLOCAL=eBPF_Runtime_Components,eBPF_Runtime_Components_JIT,eBPF_Development,eBPF_Testing /qn
+#           "C:\Program Files\ebpf-for-windows\testing\api_test.exe"
+
+#     - task: PowerShell@2
+#       displayName: Install DuoNic
+#       inputs:
+#         targetType: inline
+#         script: |
+#           if (!$IsWindows) { return } # Windows only
+#           $HasTestSigning = $false
+#           try { $HasTestSigning = ("$(bcdedit)" | Select-String -Pattern "testsigning\s+Yes").Matches.Success } catch { }
+#           if (!$HasTestSigning) { throw "Test Signing Not Enabled!" }
+
+#           Download-CoreNet-Deps
+
+#           Write-Host "Installing test root certificate"
+#           $RootCertPath = Join-Path $SetupPath "testroot-sha2.cer"
+#           if (!(Test-Path $RootCertPath)) { throw "Missing file: $RootCertPath" }
+#           certutil.exe -addstore -f "Root" $RootCertPath
+#           Write-Host "Installing DuoNic driver"
+#           $DuoNicPath = Join-Path $SetupPath duonic
+#           $DuoNicScript = (Join-Path $DuoNicPath duonic.ps1)
+#           if (!(Test-Path $DuoNicScript)) { throw "Missing file: $DuoNicScript" }
+#           Invoke-Expression "cmd /c `"pushd $DuoNicPath && pwsh duonic.ps1 -Install`""
+
