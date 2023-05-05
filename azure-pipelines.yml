@@ -1,4 +1,7 @@
-jobs:
+trigger:
+- main
+
+stages:
   # Jobs to run on pull, push, and schedule.
   # ---------------------------------------------------------------------------
 
