@@ -1,26 +1,3 @@
-on:
-  # Run on a daily schedule to perform the full set of tests.
-  schedule:
-    - cron: '00 21 * * *'
-  # Run on pull request to validate code changes.
-  pull_request:
-  merge_group:
-  # Run on push so we can capture the baseline code coverage.
-  push:
-    branches: [ main ]
-
-concurrency:
-  # Cancel any CI/CD workflow currently in progress for the same PR.
-  # Allow running concurrently with any other commits.
-  group: cicd-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-  checks: read  # Required by reusable-test.yml to check build status.
-  security-events: write # Required by codeql task.
-  issues: write # Required to create issues.
-
 jobs:
   # Jobs to run on pull, push, and schedule.
   # ---------------------------------------------------------------------------
