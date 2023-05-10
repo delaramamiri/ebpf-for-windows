@@ -19,4 +19,4 @@ jobs:
           with:
             azure-devops-project-url: https://github.com/delaramamiri/ebpf-for-windows
             azure-pipeline-name: 'My Pipeline'
-            azure-devops-token: ${{ rtiettn24txfw2x3a2nfdj4sr6srgauvqh7lx25cq63bowjhonaq }}
+            azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
