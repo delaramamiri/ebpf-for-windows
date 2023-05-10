@@ -1,0 +1,22 @@
+name: CI
+
+# Run this workflow every time a commit gets pushed to main or a pull request gets opened against main
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: 
+      - main
+
+jobs:
+    build:
+        name: Call Azure Pipeline
+        runs-on: windows-latest
+        steps:
+        - name: Azure Pipelines Action
+          uses: Azure/pipelines@v1
+          with:
+            azure-devops-project-url: https://github.com/delaramamiri/ebpf-for-windows
+            azure-pipeline-name: 'My Pipeline'
+            azure-devops-token: ${{ rtiettn24txfw2x3a2nfdj4sr6srgauvqh7lx25cq63bowjhonaq }}
