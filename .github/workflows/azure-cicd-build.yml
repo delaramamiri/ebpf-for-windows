@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+
 name: CI
 
 # Run this workflow every time a commit gets pushed to main or a pull request gets opened against main
