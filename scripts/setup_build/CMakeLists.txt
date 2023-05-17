@@ -34,6 +34,7 @@ set (ucrtbased_dll $<$<CONFIG:Debug>:${output_dir}/ucrtbased.dll>)
 set (output_ucrtbased_dll $<$<CONFIG:Debug>:${ucrtbased_dll}>)
 
 set (misc_files "setup-ebpf.ps1"
+    "setup_ebpf_azure_cicd_tests.ps1"
     "run_tests.bat"
     "common.psm1"
     "config_test_vm.psm1"
