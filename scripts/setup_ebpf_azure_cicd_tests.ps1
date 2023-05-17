@@ -1,14 +1,12 @@
 ﻿# Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
-
-param ([parameter(Mandatory=$false)][string] $WorkingDirectory = $pwd.ToString())
+param ([parameter(Mandatory=$false)][string] $LogFileName = "TestLog.log",
+       [parameter(Mandatory=$false)][string] $WorkingDirectory = $pwd.ToString())
 
 Push-Location $WorkingDirectory
 
-
 # Load other utility modules.
-Import-Module $PSScriptRoot\install_ebpf.psm1 -Force -ArgumentList ($WorkingDirectory, $LogFileName) -WarningAction SilentlyContinue
-
+Import-Module $PSScriptRoot\install_ebpf.psm1 -Force -ArgumentList ($WorkingDirectory, $LogFileName)
 
 # Install eBPF Components on the test VM.
 Write-Host "Installing eBPF..."
