@@ -1,7 +1,7 @@
 ﻿# Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
-param ([parameter(Mandatory=$false)][string] $WorkingDirectory = $pwd.ToString(),)
+param ([parameter(Mandatory=$false)][string] $WorkingDirectory = $pwd.ToString())
 
 Push-Location $WorkingDirectory
 
