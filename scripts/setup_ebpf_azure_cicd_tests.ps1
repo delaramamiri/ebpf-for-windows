@@ -1,11 +1,7 @@
 ﻿# Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
-param ([parameter(Mandatory=$false)][string] $Target = "TEST_VM",
-       [parameter(Mandatory=$false)][string] $LogFileName = "TestLog.log",
-       [parameter(Mandatory=$false)][string] $WorkingDirectory = $pwd.ToString(),
-       [parameter(Mandatory=$false)][string] $VMListJsonFileName = "vm_list.json",
-       [parameter(Mandatory=$false)][string] $TestExecutionJsonFileName = "test_execution.json")
+param ([parameter(Mandatory=$false)][string] $WorkingDirectory = $pwd.ToString(),)
 
 Push-Location $WorkingDirectory
 
