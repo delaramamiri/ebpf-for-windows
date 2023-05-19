@@ -3,7 +3,7 @@
 param ([parameter(Mandatory=$false)][string] $LogFileName = "TestLog.log",
        [parameter(Mandatory=$false)][string] $WorkingDirectory = $pwd.ToString())
 
-#Push-Location $WorkingDirectory
+Push-Location $WorkingDirectory
 $WorkingDirectory = "$env:SystemDrive\$WorkingDirectory"
 
 # Load other utility modules.
@@ -11,6 +11,8 @@ Import-Module $PSScriptRoot\install_ebpf.psm1 -Force -ArgumentList ($WorkingDire
 
 # Install eBPF Components on the test VM.
 Write-Host "Installing eBPF..."
+Write-Host $pwd.ToString()
+Write-Host "should print pwd"
 Install-eBPFComponents
 
 Pop-Location

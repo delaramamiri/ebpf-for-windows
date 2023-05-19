@@ -1,7 +1,7 @@
 ﻿# Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
-param ([parameter(Mandatory=$True)] [string] $LogFileName)
+param ([parameter(Mandatory=$True)] [string] $LogFileName = "TestLog.log")
 
 
 #

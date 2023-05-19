@@ -70,6 +70,8 @@ function Register-eBPFComponents
     }
 
     # Install user mode service.
+    Write-Host "print cur dir before ebpfsvc.exe"
+    dir
     .\eBPFSvc.exe install 2>&1 | Write-Log
     if ($LASTEXITCODE -ne 0) {
         throw ("Failed to create eBPF user mode service.")
