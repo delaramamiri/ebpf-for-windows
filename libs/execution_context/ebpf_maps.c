@@ -16,19 +16,20 @@
 typedef struct _ebpf_core_map
 {
     ebpf_core_object_t object;
-    ebpf_utf8_string_t name;
-    ebpf_map_definition_in_memory_t ebpf_map_definition;
-    uint32_t original_value_size;
-    uint8_t* data;
+    ebpf_lock_t lock;
+    _Guarded_by_(lock) ebpf_utf8_string_t name;
+    _Guarded_by_(lock) ebpf_map_definition_in_memory_t ebpf_map_definition;
+    _Guarded_by_(lock) uint32_t original_value_size;
+    _Guarded_by_(lock) uint8_t* data;
 } ebpf_core_map_t;
 
 typedef struct _ebpf_core_object_map
 {
     ebpf_core_map_t core_map;
     ebpf_lock_t lock;
-    ebpf_map_definition_in_memory_t inner_template_map_definition;
-    bool is_program_type_set;
-    ebpf_program_type_t program_type;
+    _Guarded_by_(lock) ebpf_map_definition_in_memory_t inner_template_map_definition;
+    _Guarded_by_(lock) bool is_program_type_set;
+    _Guarded_by_(lock) ebpf_program_type_t program_type;
 } ebpf_core_object_map_t;
 
 // Generations:
