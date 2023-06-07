@@ -34,7 +34,7 @@ function New-Credential
 }
 
 
-function Get-RegressionTestArtifacts-Azure
+function Get-RegressionTestArtifacts
 {
     $ArifactVersionList = @("0.9.0")
     $RegressionTestArtifactsPath = "$pwd\regression"
