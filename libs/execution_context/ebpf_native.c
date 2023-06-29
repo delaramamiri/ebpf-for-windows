@@ -30,22 +30,24 @@ typedef uint64_t (*helper_function_address)(uint64_t r1, uint64_t r2, uint64_t r
 
 typedef struct _ebpf_native_map
 {
-    map_entry_t* entry;
-    struct _ebpf_native_map* inner_map;
-    ebpf_handle_t handle;
-    ebpf_handle_t inner_map_handle;
-    int32_t original_id;
-    int32_t inner_map_original_id;
-    ebpf_utf8_string_t pin_path;
-    bool reused;
-    bool pinned;
+    ebpf_lock_t lock;
+    _Guarded_by_(lock) map_entry_t* entry;
+    _Guarded_by_(lock) struct _ebpf_native_map* inner_map;
+    _Guarded_by_(lock) ebpf_handle_t handle;
+    _Guarded_by_(lock) ebpf_handle_t inner_map_handle;
+    _Guarded_by_(lock) int32_t original_id;
+    _Guarded_by_(lock) int32_t inner_map_original_id;
+    _Guarded_by_(lock) ebpf_utf8_string_t pin_path;
+    _Guarded_by_(lock) bool reused;
+    _Guarded_by_(lock) bool pinned;
 } ebpf_native_map_t;
 
 typedef struct _ebpf_native_program
 {
-    program_entry_t* entry;
-    ebpf_handle_t handle;
-    struct _ebpf_native_helper_address_changed_context* addresses_changed_callback_context;
+    ebpf_lock_t lock;
+    _Guarded_by_(lock) program_entry_t* entry;
+    _Guarded_by_(lock) ebpf_handle_t handle;
+    _Guarded_by_(lock) struct _ebpf_native_helper_address_changed_context* addresses_changed_callback_context;
 } ebpf_native_program_t;
 
 typedef enum _ebpf_native_module_state
@@ -60,12 +62,13 @@ typedef enum _ebpf_native_module_state
 
 typedef struct _ebpf_native_handle_cleanup_information
 {
-    intptr_t process_handle;
-    ebpf_process_state_t* process_state;
-    size_t count_of_program_handles;
-    ebpf_handle_t* program_handles;
-    size_t count_of_map_handles;
-    ebpf_handle_t* map_handles;
+    ebpf_lock_t lock;
+    _Guarded_by_(lock) intptr_t process_handle;
+    _Guarded_by_(lock) ebpf_process_state_t* process_state;
+    _Guarded_by_(lock) size_t count_of_program_handles;
+    _Guarded_by_(lock) ebpf_handle_t* program_handles;
+    _Guarded_by_(lock) size_t count_of_map_handles;
+    _Guarded_by_(lock) ebpf_handle_t* map_handles;
 } ebpf_native_handle_cleanup_info_t;
 
 typedef struct _ebpf_native_handle_cleanup_context
@@ -76,21 +79,21 @@ typedef struct _ebpf_native_handle_cleanup_context
 
 typedef struct _ebpf_native_module
 {
-    ebpf_base_object_t base;
-    GUID client_module_id;
-    metadata_table_t* table;
-    ebpf_native_module_state_t state;
-    bool detaching;
+    _Guarded_by_(lock) ebpf_base_object_t base;
+    _Guarded_by_(lock) GUID client_module_id;
+    _Guarded_by_(lock) metadata_table_t* table;
+    _Guarded_by_(lock) ebpf_native_module_state_t state;
+    _Guarded_by_(lock) bool detaching;
     _Field_z_ wchar_t* service_name; // This will be used to pass to the unload module workitem.
     ebpf_lock_t lock;
-    ebpf_native_map_t* maps;
-    size_t map_count;
-    ebpf_native_program_t* programs;
-    size_t program_count;
-    HANDLE nmr_binding_handle;
-    ebpf_list_entry_t list_entry;
-    ebpf_preemptible_work_item_t* cleanup_work_item;
-    ebpf_native_handle_cleanup_context_t handle_cleanup_context;
+    _Guarded_by_(lock) ebpf_native_map_t* maps;
+    _Guarded_by_(lock) size_t map_count;
+    _Guarded_by_(lock) ebpf_native_program_t* programs;
+    _Guarded_by_(lock) size_t program_count;
+    _Guarded_by_(lock) HANDLE nmr_binding_handle;
+    _Guarded_by_(lock) ebpf_list_entry_t list_entry;
+    _Guarded_by_(lock) ebpf_preemptible_work_item_t* cleanup_work_item;
+    _Guarded_by_(lock) ebpf_native_handle_cleanup_context_t handle_cleanup_context;
 } ebpf_native_module_t;
 
 static const GUID _ebpf_native_npi_id = {/* c847aac8-a6f2-4b53-aea3-f4a94b9a80cb */

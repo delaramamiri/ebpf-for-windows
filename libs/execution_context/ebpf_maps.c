@@ -17,19 +17,20 @@
 typedef struct _ebpf_core_map
 {
     ebpf_core_object_t object;
-    ebpf_utf8_string_t name;
-    ebpf_map_definition_in_memory_t ebpf_map_definition;
-    uint32_t original_value_size;
-    uint8_t* data;
+    ebpf_lock_t lock;
+    _Guarded_by_(lock) ebpf_utf8_string_t name;
+    _Guarded_by_(lock) ebpf_map_definition_in_memory_t ebpf_map_definition;
+    _Guarded_by_(lock) uint32_t original_value_size;
+    _Guarded_by_(lock) uint8_t* data;
 } ebpf_core_map_t;
 
 typedef struct _ebpf_core_object_map
 {
-    ebpf_core_map_t core_map;
     ebpf_lock_t lock;
-    ebpf_map_definition_in_memory_t inner_template_map_definition;
-    bool is_program_type_set;
-    ebpf_program_type_t program_type;
+    _Guarded_by_(lock) ebpf_core_map_t core_map;
+    _Guarded_by_(lock) ebpf_map_definition_in_memory_t inner_template_map_definition;
+    _Guarded_by_(lock) bool is_program_type_set;
+    _Guarded_by_(lock) ebpf_program_type_t program_type;
 } ebpf_core_object_map_t;
 
 // Generations:
@@ -55,21 +56,24 @@ typedef struct _ebpf_core_object_map
  */
 typedef struct _ebpf_lru_entry
 {
-    ebpf_list_entry_t list_entry; //< List entry for the hot or cold list.
-    size_t generation;            //< Generation in which the key was last accessed.
-    uint8_t key[1];               //< Variable length key. The actual size is determined by the map definition.
+    ebpf_lock_t lock;
+    _Guarded_by_(lock) ebpf_list_entry_t list_entry; //< List entry for the hot or cold list.
+    _Guarded_by_(lock) size_t generation;            //< Generation in which the key was last accessed.
+    _Guarded_by_(lock) uint8_t key[1]; //< Variable length key. The actual size is determined by the map definition.
 } ebpf_lru_entry_t;
 
 typedef struct _ebpf_core_lru_map
 {
-    ebpf_core_map_t core_map;   //< Core map structure.
-    ebpf_list_entry_t hot_list; //< List of ebpf_lru_entry_t containing keys accessed in the current generation.
-    ebpf_list_entry_t
+    _Guarded_by_(lock) ebpf_core_map_t core_map; //< Core map structure.
+    _Guarded_by_(lock)
+        ebpf_list_entry_t hot_list; //< List of ebpf_lru_entry_t containing keys accessed in the current generation.
+    _Guarded_by_(lock) ebpf_list_entry_t
         cold_list; //< List of ebpf_lru_entry_t containing keys accessed in previous generations, sorted by generation.
-    ebpf_lock_t lock;          //< Lock to protect access to the hot, cold lists, current generation, and hot list size.
-    size_t current_generation; //< Current generation. Updated when the hot list is merged into the cold list.
-    size_t hot_list_size;      //< Current size of the hot list.
-    size_t hot_list_limit;     //< Maximum size of the hot list.
+    ebpf_lock_t lock; //< Lock to protect access to the hot, cold lists, current generation, and hot list size.
+    _Guarded_by_(lock) size_t
+        current_generation; //< Current generation. Updated when the hot list is merged into the cold list.
+    _Guarded_by_(lock) size_t hot_list_size;  //< Current size of the hot list.
+    _Guarded_by_(lock) size_t hot_list_limit; //< Maximum size of the hot list.
 } ebpf_core_lru_map_t;
 
 /**
@@ -101,31 +105,31 @@ typedef enum _ebpf_lru_key_state
 
 typedef struct _ebpf_core_lpm_map
 {
-    ebpf_core_map_t core_map;
-    uint32_t max_prefix;
+    _Guarded_by_(lock) ebpf_core_map_t core_map;
+    _Guarded_by_(lock) uint32_t max_prefix;
     // Bitmap of prefix lengths inserted into the map.
-    uint8_t data[1];
+    _Guarded_by_(lock) uint8_t data[1];
 } ebpf_core_lpm_map_t;
 
 typedef struct _ebpf_core_ring_buffer_map
 {
-    ebpf_core_map_t core_map;
+    _Guarded_by_(lock) ebpf_core_map_t core_map;
     ebpf_lock_t lock;
     // Flag that is set the first time an async operation is queued to the map.
     // This flag only transitions from off -> on. When this flag is set,
     // updates to the map acquire the lock and check the async_contexts list.
     // Note that queueing an async operation thus causes a perf degradation
     // for all subsequent updates, so should only be allowed to admin.
-    bool async_contexts_trip_wire;
-    ebpf_list_entry_t async_contexts;
+    _Guarded_by_(lock) bool async_contexts_trip_wire;
+    _Guarded_by_(lock) ebpf_list_entry_t async_contexts;
 } ebpf_core_ring_buffer_map_t;
 
 typedef struct _ebpf_core_ring_buffer_map_async_query_context
 {
-    ebpf_list_entry_t entry;
-    ebpf_core_ring_buffer_map_t* ring_buffer_map;
-    ebpf_ring_buffer_map_async_query_result_t* async_query_result;
-    void* async_context;
+    _Guarded_by_(lock) ebpf_list_entry_t entry;
+    _Guarded_by_(lock) ebpf_core_ring_buffer_map_t* ring_buffer_map;
+    _Guarded_by_(lock) ebpf_ring_buffer_map_async_query_result_t* async_query_result;
+    _Guarded_by_(lock) void* async_context;
 } ebpf_core_ring_buffer_map_async_query_context_t;
 
 /**
@@ -144,16 +148,16 @@ typedef struct _ebpf_core_ring_buffer_map_async_query_context
 
 typedef struct _ebpf_core_circular_map
 {
-    ebpf_core_map_t core_map;
+    _Guarded_by_(lock) ebpf_core_map_t core_map;
     ebpf_lock_t lock;
-    size_t begin;
-    size_t end;
+    _Guarded_by_(lock) size_t begin;
+    _Guarded_by_(lock) size_t end;
     enum
     {
         EBPF_CORE_QUEUE = 1,
         EBPF_CORE_STACK = 2,
     } type;
-    uint8_t* slots[1];
+    _Guarded_by_(lock) uint8_t* slots[1];
 } ebpf_core_circular_map_t;
 
 static size_t
