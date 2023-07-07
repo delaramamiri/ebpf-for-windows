@@ -20,7 +20,7 @@ typedef struct _ebpf_trampoline_entry
 
 typedef struct _ebpf_trampoline_table
 {
-    MDL* memory_descriptor;
+    ebpf_memory_descriptor_t* memory_descriptor;
     size_t entry_count;
     bool updated;
 } ebpf_trampoline_table_t;

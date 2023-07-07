@@ -15,6 +15,8 @@
 #include <optional>
 #include <set>
 
+#define PAGE_SIZE 4096
+
 typedef struct _free_trampoline_table
 {
     void

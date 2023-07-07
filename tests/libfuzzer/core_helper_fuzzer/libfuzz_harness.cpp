@@ -478,14 +478,9 @@ FUZZ_EXPORT int __cdecl LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     ebpf_watchdog_timer_t watchdog_timer;
 
-    // Initialize the core platform.
-    fuzz_wrapper fuzz_state;
-
-    // Initialize netebpfext. Pass false since we handle the core platform itself,
-    // to avoid deadlocks on cleanup.
-    netebpf_ext_helper_t helper(false);
-
     // Get the program.
+    fuzz_wrapper fuzz_state;
+    netebpf_ext_helper_t helper;
     fuzz_state.make_program(EBPF_PROGRAM_TYPE_XDP);
     ebpf_handle_t program_handle = fuzz_state.get_program_handle();
     ebpf_program_t* program = NULL;

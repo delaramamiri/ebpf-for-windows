@@ -6,7 +6,6 @@
 #include <sal.h>
 #include <stdio.h>
 #include <string>
-#include <vector>
 
 class capture_helper_t final
 {
@@ -31,6 +30,4 @@ class capture_helper_t final
     get_stdout_contents(void);
     std::string
     get_stderr_contents(void);
-    static std::vector<std::string>
-    buffer_to_printk_vector(std::string buffer);
 };

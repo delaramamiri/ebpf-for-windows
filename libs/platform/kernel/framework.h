@@ -11,7 +11,6 @@
 #include <ntifs.h>
 #include <netioddk.h>
 #include <ntddk.h>
-#include <ntstrsafe.h>
 #include <stdint.h>
 #include <wdm.h>
 
